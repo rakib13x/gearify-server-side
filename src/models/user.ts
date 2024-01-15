@@ -12,7 +12,7 @@ interface IUser extends Document {
   createdAt: Date;
   updateAt: Date;
   //virtual attribute
-  age: number;
+  age?: number | undefined;
 }
 const schema = new mongoose.Schema(
   {
@@ -43,9 +43,7 @@ schema.virtual("age").get(function (this: { dob: Date }) {
   const today = new Date();
   const dob = this.dob;
 
-  let age = dob?.getFullYear
-    ? today.getFullYear() - dob.getFullYear()
-    : undefined;
+  let age = dob?.getFullYear && today.getFullYear() - dob.getFullYear();
 
   if (
     today.getMonth() < dob.getMonth() ||
