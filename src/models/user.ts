@@ -33,7 +33,7 @@ const schema = new mongoose.Schema(
     },
     dob: {
       type: Date,
-      reuqired: [true, "Please enter your Date of birth"],
+      required: [true, "Please enter your Date of birth"],
     },
   },
   { timestamps: true }
