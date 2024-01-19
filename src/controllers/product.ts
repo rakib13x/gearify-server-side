@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { TryCatch } from "../middlewares/error.js";
-import { NewProductRequestBody } from "../types/types.js";
+import { NewProductRequestBody, SearchRequestQuery } from "../types/types.js";
 import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { rm } from "fs";
@@ -114,7 +114,10 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     .json({ success: true, message: "Product Deleted Successfully." });
 });
 
-export const SearchProducts = TryCatch(async (req, res, next) => {
-  const products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
-  return res.status(200).json({ success: true, products });
-});
+export const SearchProducts = TryCatch(
+  async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
+    const {} = req.query;
+    const products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+    return res.status(200).json({ success: true, products });
+  }
+);

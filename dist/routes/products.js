@@ -5,7 +5,7 @@ import { adminOnly } from "../middlewares/auth.js";
 const app = express.Router();
 //Create New Product - /api/v1/product/new
 app.post("/new", adminOnly, singleUpload, newProduct);
-// To Search Products
+// To Search Products with filters
 app.get("/search", SearchProducts);
 //Create New Product - /api/v1/product/latest
 app.get("/latest", getLatestProducts);

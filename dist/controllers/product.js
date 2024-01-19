@@ -89,6 +89,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
         .json({ success: true, message: "Product Deleted Successfully." });
 });
 export const SearchProducts = TryCatch(async (req, res, next) => {
+    const {} = req.query;
     const products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
     return res.status(200).json({ success: true, products });
 });
