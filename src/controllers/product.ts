@@ -9,6 +9,7 @@ import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
+import { invalidateCache } from "../utils/features.js";
 
 //Revalidate on New,Update,Delete Product & on New Order
 export const getLatestProducts = TryCatch(
@@ -84,6 +85,8 @@ export const newProduct = TryCatch(
       photo: photo?.path,
     });
 
+    await invalidateCache({ product: true });
+
     return res
       .status(201)
       .json({ success: true, message: "Product Created Successfully" });
@@ -118,6 +121,7 @@ export const updateProduct = TryCatch(
     if (category) product.category = category;
 
     await product.save();
+    await invalidateCache({ product: true });
 
     return res
       .status(200)
@@ -144,6 +148,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   // Delete the product from the database
   await product.deleteOne();
+  await invalidateCache({ product: true });
 
   return res
     .status(200)
