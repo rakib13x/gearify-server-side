@@ -16,7 +16,7 @@ export const newCoupon = TryCatch(async (req, res, next) => {
   });
 });
 export const applyDiscount = TryCatch(async (req, res, next) => {
-  const { coupon, amount } = req.query;
+  const { coupon } = req.query;
 
   const discount = await Coupon.findOne({ code: coupon });
 
@@ -25,5 +25,13 @@ export const applyDiscount = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     discount: discount.amount,
+  });
+});
+export const allCoupons = TryCatch(async (req, res, next) => {
+  const coupons = await Coupon.findOne({});
+
+  return res.status(200).json({
+    success: true,
+    coupons,
   });
 });
