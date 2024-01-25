@@ -35,3 +35,12 @@ export const allCoupons = TryCatch(async (req, res, next) => {
     coupons,
   });
 });
+
+export const deleteCoupon = TryCatch(async (req, res, next) => {
+  const coupons = await Coupon.findOne({});
+
+  return res.status(200).json({
+    success: true,
+    coupons,
+  });
+});
