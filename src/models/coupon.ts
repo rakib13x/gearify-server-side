@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const schema = new mongoose.Schema({
-  coupon: {
+  code: {
     type: String,
     required: [true, "Please enter Coupon code"],
     unique: true,
@@ -12,4 +12,4 @@ const schema = new mongoose.Schema({
   },
 });
 
-export const coupon = mongoose.model("Coupon", schema);
+export const Coupon = mongoose.model("Coupon", schema);
