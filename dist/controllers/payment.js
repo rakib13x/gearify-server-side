@@ -11,3 +11,13 @@ export const newCoupon = TryCatch(async (req, res, next) => {
         message: `Coupon ${coupon} Created Successfully`,
     });
 });
+export const applyDiscount = TryCatch(async (req, res, next) => {
+    const { coupon, amount } = req.query;
+    const discount = await Coupon.findOne({ code: coupon });
+    if (!discount)
+        return next(new ErrorHandler("Invalid Coupon Code", 400));
+    return res.status(200).json({
+        success: true,
+        discount: discount.amount,
+    });
+});
