@@ -148,7 +148,6 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   // Delete the product from the database
   await product.deleteOne();
-  await invalidateCache({ product: true });
 
   return res
     .status(200)
