@@ -11,6 +11,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
     stats = JSON.parse(myCache.get("admin-stats") as string);
   else {
     const today = new Date();
+    const sixMonthAgo = new Date();
+    sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
 
     const thisMonth = {
       start: new Date(today.getFullYear(), today.getMonth(), 1),
@@ -59,6 +61,12 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         $lte: lastMonth.end,
       },
     });
+    const lastSixMonthOrdersPromise = await Order.find({
+      createdAt: {
+        $gte: sixMonthAgo,
+        $lte: today,
+      },
+    });
 
     const [
       thisMonthProducts,
@@ -70,6 +78,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       productsCount,
       usersCount,
       allOrders,
+      lastSixMonthOrders,
     ] = await Promise.all([
       thisMonthProductsPromise,
       thisMonthOrdersPromise,
@@ -80,6 +89,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       Product.countDocuments(),
       User.countDocuments(),
       Order.find({}).select("total"),
+      lastSixMonthOrdersPromise,
     ]);
 
     const thisMonthRevenue = thisMonthOrders.reduce(
@@ -116,9 +126,27 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       order: allOrders.length,
     };
 
+    //last six Month Revenue api
+    const orderMonthCounts = new Array(6).fill(0);
+    const orderMonthlyRevenue = new Array(6).fill(0);
+
+    lastSixMonthOrders.forEach((order) => {
+      const creationDate = order.createdAt;
+      const monthDiff = today.getMonth() - creationDate.getMonth();
+
+      if (monthDiff < 6) {
+        orderMonthCounts[6 - monthDiff - 1] += 1;
+        orderMonthlyRevenue[6 - monthDiff - 1] += order.total;
+      }
+    });
+
     stats = {
       changePercent,
       count,
+      chart: {
+        order: orderMonthCounts,
+        revenue: orderMonthlyRevenue,
+      },
     };
   }
   return res.status(200).json({
