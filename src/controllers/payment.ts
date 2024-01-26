@@ -37,10 +37,12 @@ export const allCoupons = TryCatch(async (req, res, next) => {
 });
 
 export const deleteCoupon = TryCatch(async (req, res, next) => {
-  const coupons = await Coupon.findOne({});
+  const { id } = req.params;
+
+  await Coupon.findByIdAndDelete(id);
 
   return res.status(200).json({
     success: true,
-    coupons,
+    message: "Coupon deleted Successfully.",
   });
 });
