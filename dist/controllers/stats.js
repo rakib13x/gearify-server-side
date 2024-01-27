@@ -62,7 +62,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 $lte: today,
             },
         });
-        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthOrders, lastMonthProducts, lastMonthUsers, productsCount, usersCount, allOrders, lastSixMonthOrders,] = await Promise.all([
+        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthOrders, lastMonthProducts, lastMonthUsers, productsCount, usersCount, allOrders, lastSixMonthOrders, categories, femaleUsersCount,] = await Promise.all([
             thisMonthProductsPromise,
             thisMonthOrdersPromise,
             thisMonthUsersPromise,
@@ -73,6 +73,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             User.countDocuments(),
             Order.find({}).select("total"),
             lastSixMonthOrdersPromise,
+            Product.distinct("category"),
+            User.countDocuments({ gender: "female" }),
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
         const lastMonthRevenue = lastMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
@@ -100,13 +102,29 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 orderMonthlyRevenue[6 - monthDiff - 1] += order.total;
             }
         });
+        //categories percentage count
+        const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+        const categoriesCount = await Promise.all(categoriesCountPromise);
+        const categoryCount = [];
+        categories.forEach((category, i) => {
+            categoryCount.push({
+                [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+            });
+        });
+        //Users male or female count
+        const userRatio = {
+            male: usersCount - femaleUsersCount,
+            female: femaleUsersCount,
+        };
         stats = {
+            categoryCount,
             changePercent,
             count,
             chart: {
                 order: orderMonthCounts,
                 revenue: orderMonthlyRevenue,
             },
+            userRatio,
         };
     }
     return res.status(200).json({
