@@ -272,6 +272,13 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       marketingCost,
     };
 
+    const usersAgeGroup = {
+      teen: allUsers.filter((i) => Number(i.age) < 20).length,
+      adult: allUsers.filter((i) => Number(i.age) >= 20 && Number(i.age) < 40)
+        .length,
+      old: allUsers.filter((i) => Number(i.age) >= 20).length,
+    };
+
     const adminCustomer = {
       admin: adminUsers,
       customer: customerUsers,
@@ -283,6 +290,7 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       stockAvailability,
       revenueDistribution,
       adminCustomer,
+      usersAgeGroup,
     };
 
     myCache.set("admin-pie-charts", JSON.stringify(charts));
