@@ -139,12 +139,37 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             userRatio,
             latestTransaction: modifiedLatestTransaction,
         };
+        myCache.set("admin-stats", JSON.stringify(stats));
     }
     return res.status(200).json({
         succes: true,
         stats,
     });
 });
-export const getPieCharts = TryCatch(async () => { });
+export const getPieCharts = TryCatch(async (req, res, next) => {
+    let charts;
+    if (myCache.has("admin-pie-chart"))
+        charts = JSON.parse(myCache.get("admin-pie-charts"));
+    else {
+        const [processingOrder, shippedOrder, deliveredOrder] = await Promise.all([
+            Order.countDocuments({ status: "Processing" }),
+            Order.countDocuments({ status: "Shipped" }),
+            Order.countDocuments({ status: "Delivered" }),
+        ]);
+        const orderFullfillment = {
+            processing: processingOrder,
+            shipped: shippedOrder,
+            delivered: deliveredOrder,
+        };
+        charts = {
+            orderFullfillment,
+        };
+        myCache.set("admin-pie-charts", JSON.stringify(charts));
+    }
+    return res.status(200).json({
+        success: true,
+        charts,
+    });
+});
 export const getBarCharts = TryCatch(async () => { });
 export const getLineCharts = TryCatch(async () => { });
