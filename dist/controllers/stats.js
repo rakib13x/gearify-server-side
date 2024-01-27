@@ -62,10 +62,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 $lte: today,
             },
         });
-        const latestTransanctionPromise = Order.find({})
+        const latestTransactionPromise = Order.find({})
             .select(["orderItems", "discount", "total", "status"])
             .limit(4);
-        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthOrders, lastMonthProducts, lastMonthUsers, productsCount, usersCount, allOrders, lastSixMonthOrders, categories, femaleUsersCount, latestTransanction,] = await Promise.all([
+        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthOrders, lastMonthProducts, lastMonthUsers, productsCount, usersCount, allOrders, lastSixMonthOrders, categories, femaleUsersCount, latestTransaction,] = await Promise.all([
             thisMonthProductsPromise,
             thisMonthOrdersPromise,
             thisMonthUsersPromise,
@@ -78,7 +78,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             lastSixMonthOrdersPromise,
             Product.distinct("category"),
             User.countDocuments({ gender: "female" }),
-            latestTransanctionPromise,
+            latestTransactionPromise,
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
         const lastMonthRevenue = lastMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
@@ -120,6 +120,14 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             male: usersCount - femaleUsersCount,
             female: femaleUsersCount,
         };
+        //modify transaction
+        const modifiedLatestTransaction = latestTransaction.map((i) => ({
+            _id: i._id,
+            discount: i.discount,
+            amount: i.total,
+            quantity: i.orderItems.length,
+            status: i.status,
+        }));
         stats = {
             categoryCount,
             changePercent,
@@ -129,7 +137,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 revenue: orderMonthlyRevenue,
             },
             userRatio,
-            latestTransanction,
+            latestTransaction: modifiedLatestTransaction,
         };
     }
     return res.status(200).json({
