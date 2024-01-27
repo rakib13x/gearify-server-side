@@ -68,6 +68,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       },
     });
 
+    const latestTransanctionPromise = Order.find({})
+      .select(["orderItems", "discount", "total", "status"])
+      .limit(4);
+
     const [
       thisMonthProducts,
       thisMonthOrders,
@@ -81,6 +85,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       lastSixMonthOrders,
       categories,
       femaleUsersCount,
+      latestTransanction,
     ] = await Promise.all([
       thisMonthProductsPromise,
       thisMonthOrdersPromise,
@@ -94,6 +99,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       lastSixMonthOrdersPromise,
       Product.distinct("category"),
       User.countDocuments({ gender: "female" }),
+      latestTransanctionPromise,
     ]);
 
     const thisMonthRevenue = thisMonthOrders.reduce(
@@ -174,6 +180,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         revenue: orderMonthlyRevenue,
       },
       userRatio,
+      latestTransanction,
     };
   }
   return res.status(200).json({
