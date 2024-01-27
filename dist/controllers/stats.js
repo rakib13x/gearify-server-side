@@ -1,3 +1,4 @@
+import { getInventories } from "./../utils/features.js";
 import { myCache } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
@@ -107,13 +108,9 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             }
         });
         //categories percentage count
-        const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
-        const categoriesCount = await Promise.all(categoriesCountPromise);
-        const categoryCount = [];
-        categories.forEach((category, i) => {
-            categoryCount.push({
-                [category]: Math.round((categoriesCount[i] / productsCount) * 100),
-            });
+        const categoryCount = await getInventories({
+            categories,
+            productsCount,
         });
         //Users male or female count
         const userRatio = {
@@ -151,18 +148,25 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
     if (myCache.has("admin-pie-chart"))
         charts = JSON.parse(myCache.get("admin-pie-charts"));
     else {
-        const [processingOrder, shippedOrder, deliveredOrder] = await Promise.all([
+        const [processingOrder, shippedOrder, deliveredOrder, categories, productsCount,] = await Promise.all([
             Order.countDocuments({ status: "Processing" }),
             Order.countDocuments({ status: "Shipped" }),
             Order.countDocuments({ status: "Delivered" }),
+            Product.distinct("category"),
+            Product.countDocuments(),
         ]);
         const orderFullfillment = {
             processing: processingOrder,
             shipped: shippedOrder,
             delivered: deliveredOrder,
         };
+        const productCategories = await getInventories({
+            categories,
+            productsCount,
+        });
         charts = {
             orderFullfillment,
+            productCategories,
         };
         myCache.set("admin-pie-charts", JSON.stringify(charts));
     }
