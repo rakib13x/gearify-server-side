@@ -148,13 +148,21 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
     if (myCache.has("admin-pie-chart"))
         charts = JSON.parse(myCache.get("admin-pie-charts"));
     else {
-        const [processingOrder, shippedOrder, deliveredOrder, categories, productsCount, OutOfStock,] = await Promise.all([
+        const allOrderPromise = Order.find({}).select([
+            "total",
+            "discount",
+            "subtotal",
+            "tax",
+            "shippingCharges",
+        ]);
+        const [processingOrder, shippedOrder, deliveredOrder, categories, productsCount, OutOfStock, allOrders,] = await Promise.all([
             Order.countDocuments({ status: "Processing" }),
             Order.countDocuments({ status: "Shipped" }),
             Order.countDocuments({ status: "Delivered" }),
             Product.distinct("category"),
             Product.countDocuments(),
             Product.countDocuments({ stock: 0 }),
+            allOrderPromise,
         ]);
         const orderFullfillment = {
             processing: processingOrder,
@@ -169,10 +177,24 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
             inStock: productsCount - OutOfStock,
             outOfStock: OutOfStock,
         };
+        const grossIncome = allOrders.reduce((prev, order) => prev + (order.total || 0), 0);
+        const discount = allOrders.reduce((prev, order) => prev + (order.discount || 0), 0);
+        const productionCost = allOrders.reduce((prev, order) => prev + (order.shippingCharges || 0), 0);
+        const burnt = allOrders.reduce((prev, order) => prev + (order.tax || 0), 0);
+        const marketingCost = Math.round(grossIncome * (30 / 100));
+        const netMargin = grossIncome - discount - productionCost - burnt - marketingCost;
+        const revenueDistribution = {
+            netMargin,
+            discount,
+            productionCost,
+            burnt,
+            marketingCost,
+        };
         charts = {
             orderFullfillment,
             productCategories,
             stockAvailability,
+            revenueDistribution,
         };
         myCache.set("admin-pie-charts", JSON.stringify(charts));
     }
